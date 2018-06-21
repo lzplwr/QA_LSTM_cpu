@@ -27,18 +27,18 @@ class Dialog_system():
         answer_cand = {}
         sub_answer, sub_score = self.net.forward(q)
         answer_cand[sub_answer] = sub_score
-        response = requests.get('http://111.230.235.183:5000/qaByBd/' + q)
-        response_dict = json.loads(response.text)
-        if type(response_dict['data']) == str:
-            sub_answer = response_dict['data'].strip()
-            sub_score = self.net.cal_confidence(q, sub_answer)
-            answer_cand[sub_answer] = sub_score
-        else:
-            for sub_dict in response_dict['data']:
-                for key in sub_dict:
-                    sub_answer = sub_dict[key].strip()
-                    sub_score = self.net.cal_confidence(q, sub_answer)
-                    answer_cand[sub_answer] = sub_score
+        # response = requests.get('http://111.230.235.183:5000/qaByBd/' + q)
+        # response_dict = json.loads(response.text)
+        # if type(response_dict['data']) == str:
+        #     sub_answer = response_dict['data'].strip()
+        #     sub_score = self.net.cal_confidence(q, sub_answer)
+        #     answer_cand[sub_answer] = sub_score
+        # else:
+        #     for sub_dict in response_dict['data']:
+        #         for key in sub_dict:
+        #             sub_answer = sub_dict[key].strip()
+        #             sub_score = self.net.cal_confidence(q, sub_answer)
+        #             answer_cand[sub_answer] = sub_score
         sorted_answer = sorted(answer_cand.items(), key = operator.itemgetter(1), reverse = True)
         answer = sorted_answer[0][0]
         return answer

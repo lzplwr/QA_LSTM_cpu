@@ -117,7 +117,7 @@ class QA_LSTM_net():
         a_candid = [ index for (index,r) in sorted_q ]
         a_candid = a_candid[:candicate_num]
         a_candid = np.array(a_candid)
-        a_embs = self.answer_embedding[a_candid,:]
+        a_embs = self.answer_embedding[a_candid.astype('int64'),:]
         a_embs = Variable(torch.Tensor(a_embs))
         return a_embs,a_candicates
     
