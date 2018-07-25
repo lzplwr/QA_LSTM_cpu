@@ -30,7 +30,7 @@ app = Flask(__name__)
 @app.route("/api",methods=['POST'])
 def index():
 	question=request.form.get('sentence','')
-	print(question)
+	print("question: ", question)
 	print("--------------------------")
 	print(request.form.get("question"))
 	answer = chat(question)
@@ -39,30 +39,28 @@ def index():
 
 def chat(question):
 	answer = bot.search_answer(question)
-	print(answer)
+	print("闲聊模块: ", answer)
 	if not answer:
 		answer_cand = {}
 		# 获取语料库中匹配度最高的答案
 		sub_answer, sub_score = net.forward(question)
 		answer_cand[sub_answer] = sub_score
 		# 获取搜索引擎返回的答案，并计算它们的匹配度
-		response = requests.get('http://127.0.0.1:9009/qaByBd/' + question)
-		response_dict = json.loads(response.text)
-		print(response_dict)
-		if type(response_dict['data']) == str:
-			sub_answer = response_dict['data'].strip()
-			sub_score = net.cal_confidence(question, sub_answer)
-			answer_cand[sub_answer] = sub_score
-		else:
-			for sub_dict in response_dict['data']:
-				for key in sub_dict:
-					sub_answer = sub_dict[key].strip()
-					sub_score = net.cal_confidence(question, sub_answer)
-					answer_cand[sub_answer] = sub_score
+			# response = requests.get('http://127.0.0.1:9009/qaByBd/' + question)
+			# response_dict = json.loads(response.text)
+			# print(response_dict)
+			# if type(response_dict['data']) == str:
+			# 	sub_answer = response_dict['data'].strip()
+			# 	sub_score = net.cal_confidence(question, sub_answer)
+			# 	answer_cand[sub_answer] = sub_score
+			# else:
+			# 	for sub_dict in response_dict['data']:
+			# 		for key in sub_dict:
+			# 			sub_answer = sub_dict[key].strip()
+			# 			sub_score = net.cal_confidence(question, sub_answer)
+			# 			answer_cand[sub_answer] = sub_score
 		sorted_answer = sorted(answer_cand.items(), key = operator.itemgetter(1), reverse = True)
 		answer = sorted_answer[0][0]
-	else:
-		answer = answer['data'][0]
 	return answer
 
 if __name__ == "__main__":

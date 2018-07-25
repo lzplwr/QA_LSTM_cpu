@@ -6,6 +6,7 @@ Created on Thu Feb  1 16:41:18 2018
 """
 
 import torch
+from fuzzywuzzy import process
 from torch.autograd import Variable
 from modules.segment import segment,extract_gram
 import modules.util as util
@@ -66,7 +67,25 @@ class QA_LSTM_net():
         file_path = os.path.join(dir_path,'model','gram2ques')
         with open(file_path, 'rb') as f:
             self.gram2ques = load(f)
-    
+        self.restore_embed()
+        self.test = 66666
+
+    # def before_forward_match_question(self, question):
+    #     """
+    #     before deep learning model, match query and questions in sorpus.
+    #     if find out a match one, return it.
+    #     :return: False or the match question
+    #     """
+    #     thrshold_value = 85
+    #     choices = self.questions
+    #     match_question = process.extract(question, choices, limit=1)
+    #     print(match_question)
+    #     if match_question[0][1] >= thrshold_value:
+    #         index = self.questions.index(match_question[0][0])
+    #         return self.answers[index]
+    #     else:
+    #         return False
+
     def forward(self, question):
         a_embs,a_candicates = self.search_candicate(question)
         if len(a_candicates) == 0:
@@ -102,7 +121,7 @@ class QA_LSTM_net():
         u_embs = self.rnn(u_embs)
         max_pool = torch.nn.MaxPool2d(kernel_size = (max_l, 1), stride = 1)
         u_embs = max_pool(u_embs)
-        u_embs = u_embs.view(-1, self.rnn.hidden_size * 2)
+        u_embs = u_embs.view(-1, nb_hidden * 2)
         return u_embs
     
     def search_candicate(self, question):
