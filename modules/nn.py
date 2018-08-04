@@ -89,7 +89,7 @@ class QA_LSTM_net():
     def forward(self, question):
         a_embs,a_candicates = self.search_candicate(question)
         if len(a_candicates) == 0:
-            return '请更具体地描述你的问题。', 0.
+            return '请更具体地描述您的问题。', 0.
         q_embs = self.embed([question], max_ql)
         scores = torch.nn.functional.cosine_similarity(q_embs, a_embs)
         index = scores.data.numpy().argmax()

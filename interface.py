@@ -23,6 +23,7 @@ net.set_eval()
 code_path = os.path.realpath(__file__)
 dir_path = os.path.dirname(code_path)
 file_path = os.path.join(dir_path,'log','dialog_record.txt')
+no_good_answer_statement = "还没学会相关知识，请更具体描述您的问题或换一种问法。"
 
 
 app = Flask(__name__)
@@ -30,37 +31,38 @@ app = Flask(__name__)
 @app.route("/api",methods=['POST'])
 def index():
 	question=request.form.get('sentence','')
-	print("question: ", question)
-	print("--------------------------")
-	print(request.form.get("question"))
 	answer = chat(question)
-	print(answer)
+	if answer is None:
+		return jsonify({'result': no_good_answer_statement, 'status': 'success'})
 	return jsonify({'result': answer, 'status': 'success'})
 
-def chat(question):
+def chat(question, threshold=0.35):
 	answer = bot.search_answer(question)
-	print("闲聊模块: ", answer)
+	# print("闲聊模块: ", answer)
 	if not answer:
 		answer_cand = {}
 		# 获取语料库中匹配度最高的答案
 		sub_answer, sub_score = net.forward(question)
 		answer_cand[sub_answer] = sub_score
 		# 获取搜索引擎返回的答案，并计算它们的匹配度
-			# response = requests.get('http://127.0.0.1:9009/qaByBd/' + question)
-			# response_dict = json.loads(response.text)
-			# print(response_dict)
-			# if type(response_dict['data']) == str:
-			# 	sub_answer = response_dict['data'].strip()
-			# 	sub_score = net.cal_confidence(question, sub_answer)
-			# 	answer_cand[sub_answer] = sub_score
-			# else:
-			# 	for sub_dict in response_dict['data']:
-			# 		for key in sub_dict:
-			# 			sub_answer = sub_dict[key].strip()
-			# 			sub_score = net.cal_confidence(question, sub_answer)
-			# 			answer_cand[sub_answer] = sub_score
+		response = requests.get('http://127.0.0.1:9009/qaByBd/' + question)
+		response_dict = json.loads(response.text)
+		if type(response_dict['data']) == str:
+			sub_answer = response_dict['data'].strip()
+			sub_score = net.cal_confidence(question, sub_answer)
+			answer_cand[sub_answer] = sub_score
+		else:
+			for sub_dict in response_dict['data']:
+				for key in sub_dict:
+					sub_answer = sub_dict[key].strip()
+					sub_score = net.cal_confidence(question, sub_answer)
+					answer_cand[sub_answer] = sub_score
 		sorted_answer = sorted(answer_cand.items(), key = operator.itemgetter(1), reverse = True)
-		answer = sorted_answer[0][0]
+		# print(sorted_answer)
+		if sorted_answer[0][1] < threshold:
+			return None
+		else:
+			answer = sorted_answer[0][0]
 	return answer
 
 if __name__ == "__main__":
